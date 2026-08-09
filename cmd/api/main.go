@@ -2,16 +2,19 @@ package main
 
 import (
 	"net/http"
-	"os"
+
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/app"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 
+	app.Run()
 	server := gin.Default()
 
-	port := os.Getenv("PORT")
+	port := config.Env.Port
 	if port == "" {
 		port = "8080" // Default port if not specified in .env
 	}
