@@ -4,12 +4,13 @@ import (
 	"errors"
 	"log"
 
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/config"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/constants"
 
 	"gorm.io/gorm"
 )
 
-func SeedSuperAdmin(db *gorm.DB, superAdminEmail, superAdminPassword string) error {
+func SeedSuperAdmin(db *gorm.DB) error {
 	var admin Admin
 
 	res := db.Where("is_super_admin = ?", true).First(&admin)
@@ -22,9 +23,9 @@ func SeedSuperAdmin(db *gorm.DB, superAdminEmail, superAdminPassword string) err
 		admin = Admin{
 			FirstName:    "Super",
 			LastName:     "Admin",
-			Role:         constants.SuperAdminRole,
-			Email:        superAdminEmail,
-			Password:     superAdminPassword,
+			Role:         constants.Roles.SuperAdmin,
+			Email:        config.Env.SuperAdminEmail,
+			Password:     config.Env.SuperAdminPassword,
 			IsSuperAdmin: true,
 			IsVerified:   true,
 		}
