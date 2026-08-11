@@ -12,3 +12,21 @@ var (
 	Warning = color.New(color.FgYellow, color.Bold).SprintFunc()
 	Info    = color.New(color.FgCyan, color.Bold).SprintFunc()
 )
+
+type AppRoles struct {
+	SuperAdmin string
+	Admin      string
+	User       string
+}
+
+var Roles = AppRoles{
+	SuperAdmin: "super_admin",
+	Admin:      "admin",
+	User:       "user",
+}
+
+var RolesList = []string{
+	Roles.SuperAdmin,
+	Roles.Admin,
+	Roles.User,
+}
