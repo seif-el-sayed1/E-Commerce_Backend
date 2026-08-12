@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -68,4 +69,26 @@ func (a *Admin) GenerateToken(db *gorm.DB) (string, time.Time, error) {
 	}
 
 	return token, tokenExpDate, nil
+}
+
+func (a *Admin) ComparePassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(password))
+	return err == nil
+}
+
+func (a *Admin) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	a.Password = string(hashed)
+
+	changedAt := time.Now().Add(-1 * time.Second)
+	a.PasswordChangedAt = &changedAt
+
+	return nil
 }
