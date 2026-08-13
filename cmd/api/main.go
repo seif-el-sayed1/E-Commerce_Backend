@@ -5,6 +5,7 @@ import (
 
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/app"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/config"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,9 @@ func main() {
 
 	app.Run()
 	server := gin.Default()
+
+	// Middlewares
+	server.Use(middlewares.GlobalError())
 
 	port := config.Env.Port
 	if port == "" {
