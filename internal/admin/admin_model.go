@@ -42,6 +42,22 @@ type Admin struct {
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+func (a Admin) GetToken() *string {
+	return a.Token
+}
+
+func (a Admin) GetIsActive() bool {
+	return a.IsActive
+}
+
+func (a Admin) GetIsBlocked() bool {
+	return a.IsBlocked
+}
+
+func (a Admin) GetPasswordChangedAt() *time.Time {
+	return a.PasswordChangedAt
+}
+
 func (a *Admin) GenerateToken(db *gorm.DB) (string, time.Time, error) {
 	expStr := config.Env.JWTExpiration
 	days, err := strconv.Atoi(strings.TrimSuffix(expStr, "d"))
