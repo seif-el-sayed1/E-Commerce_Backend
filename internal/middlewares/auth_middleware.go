@@ -118,6 +118,17 @@ func Protect(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+func AllowedTo(roles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role := c.GetString("role")
+		if !contains(roles, role) {
+			abortWithError(c, utils.NewApiError("Not allowed to access this route", 403))
+			return
+		}
+		c.Next()
+	}
+}
+
 // helpers
 func contains(list []string, item string) bool {
 	for _, v := range list {
