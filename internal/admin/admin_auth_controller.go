@@ -1,0 +1,67 @@
+package admin
+
+import (
+	"errors"
+	"net/http"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
+
+	"gorm.io/gorm"
+
+	"github.com/gin-gonic/gin"
+)
+
+func Login(c *gin.Context, db *gorm.DB) {
+	var adminLoginValidator AdminLogin
+
+	if !ValidateAdminLogin(c, &adminLoginValidator) {
+		return
+	}
+
+	var admin Admin
+	result := db.First(&admin, "email = ?", adminLoginValidator.Email)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.Error(utils.NewApiError("Incorrect email or password", http.StatusUnauthorized))
+		} else {
+			c.Error(result.Error)
+		}
+		c.Abort()
+		return
+	}
+
+	if admin.IsDeleted {
+		c.Error(utils.NewApiError("Incorrect email or password", http.StatusForbidden))
+		c.Abort()
+		return
+	}
+
+	if !admin.ComparePassword(adminLoginValidator.Password) {
+		c.Error(utils.NewApiError("Incorrect email or password", http.StatusUnauthorized))
+		c.Abort()
+		return
+	}
+
+	token, expDate, err := admin.GenerateToken(db)
+	if err != nil {
+		c.Error(utils.NewApiError("Failed to generate token", http.StatusInternalServerError))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"token":   token,
+		"exp":     expDate,
+		"data": gin.H{
+			"id":             admin.ID,
+			"first_name":     admin.FirstName,
+			"last_name":      admin.LastName,
+			"email":          admin.Email,
+			"is_super_admin": admin.IsSuperAdmin,
+			"role":           admin.Role,
+			"is_active":      admin.IsActive,
+			"is_verified":    admin.IsVerified,
+		},
+	})
+
+}
