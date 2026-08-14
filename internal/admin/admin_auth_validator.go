@@ -12,7 +12,7 @@ import (
 
 type AdminLogin struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required`
+	Password string `json:"password" binding:"required"`
 }
 
 func ValidateAdminLogin(c *gin.Context, obj interface{}) bool {
