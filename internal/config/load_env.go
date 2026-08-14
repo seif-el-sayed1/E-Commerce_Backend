@@ -12,6 +12,7 @@ import (
 type Config struct {
 	DatabaseURL         string
 	Port                string
+	BASE_URL            string
 	JWTSecret           string
 	JWTExpiration       string
 	SuperAdminEmail     string
@@ -43,6 +44,7 @@ func LoadEnv() {
 	Env = Config{
 		DatabaseURL:         os.Getenv("DATABASE_URL"),
 		Port:                os.Getenv("PORT"),
+		BASE_URL:            os.Getenv("BASE_URL"),
 		JWTSecret:           os.Getenv("JWT_SECRET"),
 		JWTExpiration:       os.Getenv("JWT_EXPIRATION"),
 		SuperAdminEmail:     os.Getenv("SUPER_ADMIN_EMAIL"),
