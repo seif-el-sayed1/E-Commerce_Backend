@@ -12,6 +12,6 @@ import (
 func AppRoutes(server *gin.Engine, db *gorm.DB) {
 	api := server.Group(config.Env.BASE_URL)
 
-	admin.AdminAuthRoutes(api, db, middlewares.Protect(db))
+	admin.AdminAuthRoutes(api, db, middlewares.Protect(db), middlewares.AllowedTo)
 	admin.AdminRoutes(api, db, middlewares.Protect(db), middlewares.AllowedTo)
 }
