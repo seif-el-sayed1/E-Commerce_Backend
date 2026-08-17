@@ -31,13 +31,40 @@ func ValidateAdminLogin(c *gin.Context, obj interface{}) bool {
 	}
 	return true
 }
+
+type AdminChangePasword struct {
+	CurrentPassword string `json:"currentPassword" binding:"required"`
+	NewPassword     string `json:"newPassword" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required,min=8"`
+}
+
+func ValidateAdminChangePassword(c *gin.Context, obj interface{}) bool {
+
+	if err := c.ShouldBindJSON(obj); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			message := validationMessage(ve[0])
+			c.Error(utils.NewApiError(message, http.StatusBadRequest))
+			c.Abort()
+			return false
+		}
+
+		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Abort()
+		return false
+	}
+	return true
+}
+
 func validationMessage(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
-		return fe.Field() + " is required"
+		return utils.CamelToWords(fe.Field()) + " is required"
 	case "email":
 		return "Invalid email format"
+	case "min":
+		return utils.CamelToWords(fe.Field()) + " must have at least " + fe.Param() + " characters"
 	default:
-		return "Invalid value for " + fe.Field()
+		return "Invalid value for " + utils.CamelToWords(fe.Field())
 	}
 }
