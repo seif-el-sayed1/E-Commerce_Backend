@@ -53,6 +53,9 @@ func checkUser[T AuthUser](db *gorm.DB, token string, claims *Claims) (T, *utils
 
 	// Check if the password has been changed
 	if pca := currentUser.GetPasswordChangedAt(); pca != nil {
+		if claims.IssuedAt == nil {
+			return currentUser, utils.NewApiError("Invalid token, please login again...", 401)
+		}
 		if pca.Unix() > claims.IssuedAt.Unix() {
 			return currentUser, utils.NewApiError("Password recently changed, please login again...", 401)
 		}
