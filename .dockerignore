@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Env & secrets (must never end up inside the image)
+.env
+.*.env
+.docker.env
+serviceAccount-Firebase-*.json
+*-data.json
+settings.json
+
+# Binaries (rebuilt inside the image anyway)
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
+/tmp/
+*.test
+*.out
+coverage.html
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Uploads / logs
+uploads/
+*.log
+
+# SQL dumps
+*.sql
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docs (not needed inside the image)
+*.md
+README.md
+
+# Misc project-specific
+import-data.go
+*.rest
+*-v2.go
