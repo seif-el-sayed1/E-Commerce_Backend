@@ -64,11 +64,13 @@ func (a *Admin) GenerateToken(db *gorm.DB) (string, time.Time, error) {
 	if err != nil {
 		return "", time.Time{}, err
 	}
-	tokenExpDate := time.Now().AddDate(0, 0, days)
+	now := time.Now()
+	tokenExpDate := now.AddDate(0, 0, days)
 
 	claims := jwt.MapClaims{
 		"userId": a.ID.String(),
 		"role":   a.Role,
+		"iat":    now.Unix(),
 		"exp":    tokenExpDate.Unix(),
 	}
 
@@ -86,7 +88,6 @@ func (a *Admin) GenerateToken(db *gorm.DB) (string, time.Time, error) {
 
 	return token, tokenExpDate, nil
 }
-
 func (a *Admin) ComparePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(password))
 	return err == nil
@@ -106,5 +107,21 @@ func (a *Admin) BeforeCreate(tx *gorm.DB) error {
 	changedAt := time.Now().Add(-1 * time.Second)
 	a.PasswordChangedAt = &changedAt
 
+	return nil
+}
+
+func (a *Admin) BeforeUpdate(tx *gorm.DB) error {
+	if len(a.Password) > 0 && !strings.HasPrefix(a.Password, "$2a$") &&
+		!strings.HasPrefix(a.Password, "$2b$") && !strings.HasPrefix(a.Password, "$2y$") {
+
+		hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		a.Password = string(hashed)
+
+		changedAt := time.Now().Add(-1 * time.Second)
+		a.PasswordChangedAt = &changedAt
+	}
 	return nil
 }
