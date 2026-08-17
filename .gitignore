@@ -23,7 +23,7 @@ vendor/
 
 # Env & secrets
 .env
-.env.*
+.*.env
 serviceAccount-Firebase-*.json
 *-data.json
 settings.json
