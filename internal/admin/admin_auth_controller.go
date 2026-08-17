@@ -4,12 +4,16 @@ import (
 	"errors"
 	"net/http"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
+	"time"
 
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
 
+// @desc    Admin login
+// @route   POST /admins/auth/login
+// @access  Public
 func Login(c *gin.Context, db *gorm.DB) {
 	var adminLoginValidator AdminLogin
 
@@ -62,6 +66,48 @@ func Login(c *gin.Context, db *gorm.DB) {
 			"is_active":      admin.IsActive,
 			"is_verified":    admin.IsVerified,
 		},
+	})
+
+}
+
+// @desc    Change logged in admin password
+// @route   PATCH /admin/auth/change-password
+// @access  Private
+func AdminChangePassowrd(c *gin.Context, db *gorm.DB) {
+	currentAdmin := utils.GetUserData(c).(Admin)
+
+	var body AdminChangePasword
+	if !ValidateAdminChangePassword(c, &body) {
+		return
+	}
+
+	if !currentAdmin.ComparePassword(body.CurrentPassword) {
+		c.Error(utils.NewApiError("Incorrect password", http.StatusBadRequest))
+		c.Abort()
+		return
+	}
+
+	if body.NewPassword != body.ConfirmPassword {
+		c.Error(utils.NewApiError("Passwords do not match", http.StatusBadRequest))
+		c.Abort()
+		return
+	}
+
+	currentAdmin.Password = body.NewPassword
+
+	now := time.Now()
+	currentAdmin.PasswordChangedAt = &now
+
+	result := db.Save(&currentAdmin)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Password changed successfully",
 	})
 
 }
