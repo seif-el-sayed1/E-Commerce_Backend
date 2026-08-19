@@ -71,12 +71,12 @@ func Login(c *gin.Context, db *gorm.DB) {
 }
 
 // @desc    Change logged in admin password
-// @route   PATCH /admin/auth/change-password
+// @route   PATCH /adminS/auth/change-password
 // @access  Private
-func AdminChangePassowrd(c *gin.Context, db *gorm.DB) {
+func AdminChangePassword(c *gin.Context, db *gorm.DB) {
 	currentAdmin := utils.GetUserData(c).(Admin)
 
-	var body AdminChangePasword
+	var body ChangePassword
 	if !ValidateAdminChangePassword(c, &body) {
 		return
 	}
@@ -108,6 +108,49 @@ func AdminChangePassowrd(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Password changed successfully",
+	})
+
+}
+
+// @desc    Verify logged in admin account
+// @route   POST /adminS/auth/verify-account
+// @access  Private
+func VerifyAdminAccount(c *gin.Context, db *gorm.DB) {
+	currentAdmin := utils.GetUserData(c).(Admin)
+
+	var body VerifyAccount
+	if !ValidateAdminVerifyAccount(c, &body) {
+		return
+	}
+
+	if currentAdmin.IsVerified {
+		c.Error(utils.NewApiError("Account already verified", http.StatusBadRequest))
+		c.Abort()
+		return
+	}
+
+	if body.Password != body.ConfirmPassword {
+		c.Error(utils.NewApiError("Passwords do not match", http.StatusBadRequest))
+		c.Abort()
+		return
+	}
+
+	currentAdmin.IsVerified = true
+	currentAdmin.Password = body.Password
+
+	now := time.Now()
+	currentAdmin.PasswordChangedAt = &now
+
+	result := db.Save(&currentAdmin)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Account verified successfully",
 	})
 
 }
