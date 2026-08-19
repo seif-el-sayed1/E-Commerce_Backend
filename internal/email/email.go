@@ -28,3 +28,25 @@ func AdminVerificationEmail(token, emailAddress string) error {
 		HTML:    html,
 	})
 }
+
+func AdminForgotPasswordEmail(token, emailAddress string) error {
+	forgotLink := config.Env.AdminForgotPass
+	loginLink := config.Env.AdminLogin
+	appName := config.Env.AppName
+
+	html := GenerateHTML(TemplateOptions{
+		EmailTitle:    "Reset your admin account password",
+		EmailSubTitle: "Tap the button below to reset your account password.",
+		BtnText:       "Reset Password",
+		BtnLink:       forgotLink + token,
+		BelowText:     "You can login from here:",
+		BelowLink:     loginLink,
+		FooterNote:    "You are receiving this email because a request to reset the password for your " + appName + " admin account has been initiated. If you did not initiate this action, please disregard this message.",
+	})
+
+	return Send(SendOptions{
+		Email:   emailAddress,
+		Subject: appName + " reset admin account password",
+		HTML:    html,
+	})
+}
