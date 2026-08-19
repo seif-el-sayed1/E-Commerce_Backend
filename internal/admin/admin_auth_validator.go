@@ -32,13 +32,36 @@ func ValidateAdminLogin(c *gin.Context, obj interface{}) bool {
 	return true
 }
 
-type AdminChangePasword struct {
+type ChangePassword struct {
 	CurrentPassword string `json:"currentPassword" binding:"required"`
 	NewPassword     string `json:"newPassword" binding:"required,min=8"`
 	ConfirmPassword string `json:"confirmPassword" binding:"required,min=8"`
 }
 
 func ValidateAdminChangePassword(c *gin.Context, obj interface{}) bool {
+
+	if err := c.ShouldBindJSON(obj); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			message := validationMessage(ve[0])
+			c.Error(utils.NewApiError(message, http.StatusBadRequest))
+			c.Abort()
+			return false
+		}
+
+		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Abort()
+		return false
+	}
+	return true
+}
+
+type VerifyAccount struct {
+	Password        string `json:"password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required,min=8"`
+}
+
+func ValidateAdminVerifyAccount(c *gin.Context, obj interface{}) bool {
 
 	if err := c.ShouldBindJSON(obj); err != nil {
 		var ve validator.ValidationErrors
