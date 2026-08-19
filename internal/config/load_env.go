@@ -19,6 +19,13 @@ type Config struct {
 	SuperAdminPassword  string
 	SuperAdminFirstName string
 	SuperAdminLastName  string
+	EmailPass           string
+	EmailUser           string
+	AdminUrl            string
+	AdminLogin          string
+	AdminVerify         string
+	AdminForgotPass     string
+	AppName             string
 }
 
 var Env Config
@@ -51,6 +58,13 @@ func LoadEnv() {
 		SuperAdminPassword:  os.Getenv("SUPER_ADMIN_PASSWORD"),
 		SuperAdminFirstName: os.Getenv("SUPER_ADMIN_FIRST_NAME"),
 		SuperAdminLastName:  os.Getenv("SUPER_ADMIN_LAST_NAME"),
+		EmailPass:           os.Getenv("EMAIL_PASS"),
+		EmailUser:           os.Getenv("EMAIL_USER"),
+		AdminUrl:            os.Getenv("ADMIN_URL"),
+		AdminVerify:         os.Getenv("ADMIN_VERIFY"),
+		AdminLogin:          os.Getenv("ADMIN_LOGIN"),
+		AdminForgotPass:     os.Getenv("ADMIN_FORGOT_PASS"),
+		AppName:             os.Getenv("APP_NAME"),
 	}
 
 	log.Println(constants.Success("✅ Environment variables loaded"))
