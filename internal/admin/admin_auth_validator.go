@@ -101,6 +101,29 @@ func ValidateAdminForgetPassword(c *gin.Context, obj interface{}) bool {
 	return true
 }
 
+type ResetPassword struct {
+	Password        string `json:"password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirmPassword" binding:"required,min=8"`
+}
+
+func ValidateAdminResetPassword(c *gin.Context, obj interface{}) bool {
+
+	if err := c.ShouldBindJSON(obj); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			message := validationMessage(ve[0])
+			c.Error(utils.NewApiError(message, http.StatusBadRequest))
+			c.Abort()
+			return false
+		}
+
+		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Abort()
+		return false
+	}
+	return true
+}
+
 func validationMessage(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
