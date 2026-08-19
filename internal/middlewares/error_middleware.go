@@ -64,7 +64,7 @@ func handleDuplicatedFieldsDB(pgErr *pgconn.PgError) *utils.ApiError {
 }
 
 func handleForeignKeyConstraint(pgErr *pgconn.PgError) *utils.ApiError {
-	if strings.Contains(pgErr.Message, "is not present in table") {
+	if strings.Contains(pgErr.Detail, "is not present in table") {
 		field := extractField(pgErr)
 
 		return utils.NewApiError(
