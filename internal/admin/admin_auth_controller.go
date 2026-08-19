@@ -200,3 +200,58 @@ func AdminForgetPassword(c *gin.Context, db *gorm.DB) {
 		"message": "Password reset email sent successfully",
 	})
 }
+
+// @desc    Forgot admin account password
+// @route   PATCH /admin/auth/reset-password/:token
+// @access  Private
+func AdminResetPassword(c *gin.Context, db *gorm.DB) {
+	var body ResetPassword
+	token := c.Param("token")
+
+	if !ValidateAdminResetPassword(c, &body) {
+		return
+	}
+
+	if body.Password != body.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Passwords do not match",
+		})
+		return
+	}
+
+	hashedToken := sha256Hex(token)
+
+	var admin Admin
+	result := db.First(
+		&admin,
+		"password_reset_token = ? AND password_reset_expires_at > ?",
+		hashedToken, time.Now(),
+	)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Token is invalid or has expired",
+		})
+		return
+	}
+
+	now := time.Now()
+	admin.Password = body.Password
+	admin.PasswordChangedAt = &now
+	admin.VerificationToken = nil
+	admin.PasswordResetToken = nil
+	admin.PasswordResetExpiresAt = nil
+
+	result = db.Save(&admin)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Password reset successfully",
+	})
+}
