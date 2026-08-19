@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"net/http"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/email"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
 	"time"
 
@@ -153,4 +154,49 @@ func VerifyAdminAccount(c *gin.Context, db *gorm.DB) {
 		"message": "Account verified successfully",
 	})
 
+}
+
+// @desc    Forgot admin account password
+// @route   POST /admins/auth/forgot-Password
+// @access  Public
+func AdminForgetPassword(c *gin.Context, db *gorm.DB) {
+	var body ForgetPassword
+	if !ValidateAdminForgetPassword(c, &body) {
+		return
+	}
+
+	var admin Admin
+	result := db.First(&admin, "email = ?", body.Email)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	if admin.IsBlocked || admin.IsDeleted {
+		c.Error(utils.NewApiError("Account is blocked or deleted", http.StatusForbidden))
+		c.Abort()
+		return
+	}
+
+	token := admin.CreatePasswordResetToken()
+
+	result = db.Save(&admin)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	err := email.AdminForgotPasswordEmail(token, body.Email)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Password reset email sent successfully",
+	})
 }
