@@ -1,6 +1,9 @@
 package admin
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"strconv"
 	"strings"
 	"time"
@@ -124,4 +127,40 @@ func (a *Admin) BeforeUpdate(tx *gorm.DB) error {
 		a.PasswordChangedAt = &changedAt
 	}
 	return nil
+}
+func (a *Admin) CreateEmailToken(forPassword bool) (rawToken string, resetToken *string) {
+	raw := generateRandomHex(32)
+
+	hashed := sha256Hex(raw)
+	a.VerificationToken = &hashed
+
+	expiresAt := time.Now().Add(10 * time.Minute)
+	a.VerificationTokenExp = &expiresAt
+
+	if forPassword {
+		return raw, &hashed
+	}
+	return raw, nil
+}
+
+func (a *Admin) CreatePasswordResetToken() string {
+	rawToken, resetToken := a.CreateEmailToken(true)
+
+	a.PasswordResetToken = resetToken
+	expiresAt := time.Now().Add(10 * time.Minute)
+	a.PasswordResetExpiresAt = &expiresAt
+
+	return rawToken
+}
+
+// helpers
+func generateRandomHex(n int) string {
+	bytes := make([]byte, n)
+	_, _ = rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}
+
+func sha256Hex(input string) string {
+	hash := sha256.Sum256([]byte(input))
+	return hex.EncodeToString(hash[:])
 }
