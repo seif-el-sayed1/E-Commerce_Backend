@@ -188,3 +188,86 @@ func GetMyProfile(c *gin.Context, db *gorm.DB) {
 		},
 	})
 }
+
+// @desc    Update admin
+// @route   PATCH /admins/:id
+// @access  Private
+func UpdateAdmin(c *gin.Context, db *gorm.DB) {
+	var body Update
+	if !ValidateUpdateAdmin(c, &body) {
+		return
+	}
+
+	adminId := c.Param("id")
+	var admin Admin
+	result := db.First(&admin, "id=?", adminId)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.Error(utils.NewApiError("Admin not found", http.StatusNotFound))
+		} else {
+			c.Error(result.Error)
+		}
+		c.Abort()
+		return
+	}
+
+	admin.FirstName = body.FirstName
+	admin.LastName = body.LastName
+	admin.Phone = body.Phone
+
+	result = db.Save(&admin)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Admin updated successfully",
+		"data": gin.H{
+			"id":             admin.ID,
+			"first_name":     admin.FirstName,
+			"last_name":      admin.LastName,
+			"email":          admin.Email,
+			"phone":          admin.Phone,
+			"role":           admin.Role,
+			"is_super_admin": admin.IsSuperAdmin,
+			"is_verified":    admin.IsVerified,
+			"is_blocked":     admin.IsBlocked,
+			"is_deleted":     admin.IsDeleted,
+			"is_active":      admin.IsActive,
+			"created_at":     admin.CreatedAt,
+		},
+	})
+}
+
+// @desc    Delete admin
+// @route   DELETE /admin/:id
+// @access  Private
+func DeleteAdmin(c *gin.Context, db *gorm.DB) {
+	adminId := c.Param("id")
+	var admin Admin
+	result := db.First(&admin, "id=?", adminId)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.Error(utils.NewApiError("Admin not found", http.StatusNotFound))
+		} else {
+			c.Error(result.Error)
+		}
+		c.Abort()
+		return
+	}
+
+	result = db.Delete(&admin)
+	if result.Error != nil {
+		c.Error(result.Error)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Admin deleted successfully",
+	})
+}
