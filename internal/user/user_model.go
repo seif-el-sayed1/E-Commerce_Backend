@@ -1,6 +1,9 @@
 package user
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"strconv"
 	"strings"
 	"time"
@@ -95,4 +98,73 @@ func (a *User) GenerateToken(db *gorm.DB) (string, time.Time, error) {
 func (a *User) ComparePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(password))
 	return err == nil
+}
+
+func (a *User) BeforeCreate(tx *gorm.DB) error {
+	if a.ID == uuid.Nil {
+		a.ID = uuid.New()
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	a.Password = string(hashed)
+
+	changedAt := time.Now().Add(-1 * time.Second)
+	a.PasswordChangedAt = &changedAt
+
+	return nil
+}
+
+func (a *User) BeforeUpdate(tx *gorm.DB) error {
+	if len(a.Password) > 0 && !strings.HasPrefix(a.Password, "$2a$") &&
+		!strings.HasPrefix(a.Password, "$2b$") && !strings.HasPrefix(a.Password, "$2y$") {
+
+		hashed, err := bcrypt.GenerateFromPassword([]byte(a.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		a.Password = string(hashed)
+
+		changedAt := time.Now().Add(-1 * time.Second)
+		a.PasswordChangedAt = &changedAt
+	}
+	return nil
+}
+func (a *User) CreateEmailToken(forPassword bool) (rawToken string, resetToken *string) {
+	raw := generateRandomHex(32)
+
+	hashed := sha256Hex(raw)
+	a.VerificationToken = &hashed
+
+	expiresAt := time.Now().Add(10 * time.Minute)
+	a.VerificationTokenExp = &expiresAt
+
+	if forPassword {
+		return raw, &hashed
+	}
+	return raw, nil
+}
+
+func (a *User) CreatePasswordResetToken() string {
+	rawToken, resetToken := a.CreateEmailToken(true)
+
+	a.PasswordResetToken = resetToken
+	expiresAt := time.Now().Add(10 * time.Minute)
+	a.PasswordResetExpiresAt = &expiresAt
+
+	return rawToken
+}
+
+// helpers
+func generateRandomHex(n int) string {
+	bytes := make([]byte, n)
+	_, _ = rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}
+
+func sha256Hex(input string) string {
+	hash := sha256.Sum256([]byte(input))
+	return hex.EncodeToString(hash[:])
 }
