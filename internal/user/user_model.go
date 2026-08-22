@@ -36,3 +36,19 @@ type User struct {
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
+
+func (a User) GetToken() *string {
+	return a.Token
+}
+
+func (a User) GetIsActive() bool {
+	return a.IsActive
+}
+
+func (a User) GetIsBlocked() bool {
+	return a.IsBlocked
+}
+
+func (a User) GetPasswordChangedAt() *time.Time {
+	return a.PasswordChangedAt
+}
