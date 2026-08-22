@@ -1,9 +1,17 @@
 package user
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/config"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -51,4 +59,40 @@ func (a User) GetIsBlocked() bool {
 
 func (a User) GetPasswordChangedAt() *time.Time {
 	return a.PasswordChangedAt
+}
+
+func (a *User) GenerateToken(db *gorm.DB) (string, time.Time, error) {
+	expStr := config.Env.JWTExpiration
+	days, err := strconv.Atoi(strings.TrimSuffix(expStr, "d"))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	now := time.Now()
+	tokenExpDate := now.AddDate(0, 0, days)
+
+	claims := jwt.MapClaims{
+		"userId": a.ID.String(),
+		"role":   a.Role,
+		"iat":    now.Unix(),
+		"exp":    tokenExpDate.Unix(),
+	}
+
+	tokenObj := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenObj.SignedString([]byte(config.Env.JWTSecret))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	a.Token = &token
+	a.TokenExpDate = &tokenExpDate
+	if err := db.Save(a).Error; err != nil {
+		return "", time.Time{}, err
+	}
+
+	return token, tokenExpDate, nil
+}
+
+func (a *User) ComparePassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(a.Password), []byte(password))
+	return err == nil
 }
