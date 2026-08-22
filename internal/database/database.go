@@ -9,6 +9,7 @@ import (
 
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/admin"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/constants"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/user"
 )
 
 var DB *gorm.DB
@@ -30,6 +31,7 @@ func ConnectToDb() {
 func MigrateModels() {
 	err := DB.AutoMigrate(
 		admin.Admin{},
+		user.User{},
 	)
 	if err != nil {
 		log.Fatal(constants.Error("Failed to migrate database: "), err)
