@@ -32,3 +32,26 @@ func ValidateAddAdmin(c *gin.Context, obj interface{}) bool {
 	}
 	return true
 }
+
+type Update struct {
+	FirstName string  `json:"first_name"`
+	LastName  string  `json:"last_name"`
+	Phone     *string `json:"phone"`
+}
+
+func ValidateUpdateAdmin(c *gin.Context, obj interface{}) bool {
+	if err := c.ShouldBindJSON(obj); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			message := validationMessage(ve[0])
+			c.Error(utils.NewApiError(message, http.StatusBadRequest))
+			c.Abort()
+			return false
+		}
+
+		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Abort()
+		return false
+	}
+	return true
+}
