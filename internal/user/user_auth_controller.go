@@ -129,3 +129,57 @@ func UserLogin(c *gin.Context, db *gorm.DB) {
 
 	login(c, db, user, body.Password)
 }
+
+// @desc    Sign Up
+// @route   POST /user/auth/register
+// @access  Public
+func UserRegister(c *gin.Context, db *gorm.DB) {
+	var body UserRegisterRequest
+	if !ValidateUserRegister(c, &body) {
+		return
+	}
+
+	rawCode, hashedCode, err := utils.GenerateOTPCode()
+	if err != nil {
+		c.Error(utils.NewApiError("Failed to generate verification code", http.StatusInternalServerError))
+		c.Abort()
+		return
+	}
+
+	exp := time.Now().Add(10 * time.Minute)
+
+	newUser := User{
+		FirstName:           body.FirstName,
+		LastName:            body.LastName,
+		Email:               body.Email,
+		Phone:               body.Phone,
+		Password:            body.Password,
+		VerificationCode:    &hashedCode,
+		VerificationCodeExp: &exp,
+	}
+
+	if err := db.Create(&newUser).Error; err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if err := email.UserVerificationEmail(rawCode, newUser.Email); err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Verification OTP is sent to your Email",
+		"data": gin.H{
+			"id":         newUser.ID,
+			"first_name": newUser.FirstName,
+			"last_name":  newUser.LastName,
+			"email":      newUser.Email,
+			"phone":      newUser.Phone,
+			"role":       newUser.Role,
+		},
+	})
+}
