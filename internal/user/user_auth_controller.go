@@ -380,3 +380,57 @@ func SendOTP(c *gin.Context, db *gorm.DB) {
 		"message": "Verification OTP is sent to your Email",
 	})
 }
+
+// @desc    Update logged user password
+// @route   PATCH /user/auth/update-password
+// @access  Private
+func UpdateLoggedUserPassword(c *gin.Context, db *gorm.DB) {
+	currentUser := utils.GetUserData(c).(User)
+
+	var body UpdatePasswordRequest
+	if !ValidateUpdatePassword(c, &body) {
+		return
+	}
+
+	// Verify current password
+	if !currentUser.ComparePassword(body.CurrentPassword) {
+		c.Error(utils.NewApiError("Incorrect password", http.StatusUnauthorized))
+		c.Abort()
+		return
+	}
+
+	// Update with new password — BeforeUpdate hook hashes it automatically
+	currentUser.Password = body.NewPassword
+
+	if err := db.Save(&currentUser).Error; err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Password updated successfully, please login again",
+	})
+}
+
+// @desc    Log out — clears the stored token
+// @route   POST /user/auth/log-out
+// @access  Private
+func UserLogout(c *gin.Context, db *gorm.DB) {
+	currentUser := utils.GetUserData(c).(User)
+
+	if err := db.Model(&currentUser).Updates(map[string]interface{}{
+		"token":          nil,
+		"token_exp_date": nil,
+	}).Error; err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "User logged out successfully!",
+	})
+}
