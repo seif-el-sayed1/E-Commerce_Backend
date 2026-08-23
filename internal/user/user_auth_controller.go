@@ -1,6 +1,8 @@
 package user
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"time"
@@ -180,6 +182,85 @@ func UserRegister(c *gin.Context, db *gorm.DB) {
 			"email":      newUser.Email,
 			"phone":      newUser.Phone,
 			"role":       newUser.Role,
+		},
+	})
+}
+
+// @desc    User account verification
+// @route   POST /user/auth/verify-account
+// @access  Public
+func UserVerifyAccount(c *gin.Context, db *gorm.DB) {
+	var body UserVerifyAccountRequest
+	if !ValidateUserVerifyAccount(c, &body) {
+		return
+	}
+
+	// Find user by email
+	var user User
+	if err := db.First(&user, "email = ?", body.Email).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.Error(utils.NewApiError("Invalid request", http.StatusBadRequest))
+		} else {
+			c.Error(err)
+		}
+		c.Abort()
+		return
+	}
+
+	// Make sure a verification code was actually issued
+	if user.VerificationCode == nil || user.VerificationCodeExp == nil {
+		c.Error(utils.NewApiError("Invalid request", http.StatusBadRequest))
+		c.Abort()
+		return
+	}
+
+	// Check expiry
+	if time.Now().After(*user.VerificationCodeExp) {
+		c.Error(utils.NewApiError("Verification OTP has expired", http.StatusUnauthorized))
+		c.Abort()
+		return
+	}
+
+	// Hash the incoming code and compare
+	hash := sha256.Sum256([]byte(body.Code))
+	hashedCode := hex.EncodeToString(hash[:])
+	if *user.VerificationCode != hashedCode {
+		c.Error(utils.NewApiError("Invalid verification OTP", http.StatusUnauthorized))
+		c.Abort()
+		return
+	}
+
+	// Mark account as verified and clear the OTP fields
+	if err := db.Model(&user).Updates(map[string]interface{}{
+		"is_verified":           true,
+		"verification_code":     nil,
+		"verification_code_exp": nil,
+	}).Error; err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	// Generate JWT token
+	token, expDate, err := user.GenerateToken(db)
+	if err != nil {
+		c.Error(utils.NewApiError("Failed to generate token", http.StatusInternalServerError))
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Account verified successfully",
+		"token":   token,
+		"exp":     expDate,
+		"data": gin.H{
+			"id":         user.ID,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+			"email":      user.Email,
+			"phone":      user.Phone,
+			"role":       user.Role,
 		},
 	})
 }
