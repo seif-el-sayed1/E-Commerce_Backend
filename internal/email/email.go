@@ -50,3 +50,20 @@ func AdminForgotPasswordEmail(token, emailAddress string) error {
 		HTML:    html,
 	})
 }
+
+func UserVerificationEmail(code, emailAddress string) error {
+	appName := config.Env.AppName
+
+	html := GenerateHTML(TemplateOptions{
+		EmailTitle:    "Verify Your user Account",
+		EmailSubTitle: "Use the code below to verify your email address.",
+		BtnText:       code,
+		FooterNote:    "You received this email because you have registered on " + appName + ". If you did not initiate this action, please ignore this email.",
+	})
+
+	return Send(SendOptions{
+		Email:   emailAddress,
+		Subject: appName + " account verification",
+		HTML:    html,
+	})
+}
