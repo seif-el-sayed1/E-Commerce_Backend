@@ -11,6 +11,7 @@ import (
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/admin"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/config"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/constants"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/user"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
 )
 
@@ -104,6 +105,10 @@ func Protect(db *gorm.DB) gin.HandlerFunc {
 		// ADMIN, SUPER_ADMIN
 		case constants.Roles.SuperAdmin, constants.Roles.Admin:
 			currentUser, apiErr = checkUser[admin.Admin](db, token, claims)
+
+		// USER
+		case constants.Roles.User:
+			currentUser, apiErr = checkUser[user.User](db, token, claims)
 
 		default:
 			apiErr = utils.NewApiError("Invalid token role, please login again...", 401)
