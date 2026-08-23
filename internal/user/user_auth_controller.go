@@ -264,3 +264,119 @@ func UserVerifyAccount(c *gin.Context, db *gorm.DB) {
 		},
 	})
 }
+
+// @desc    Verify OTP (used when user has a code but no token yet)
+// @route   POST /user/auth/verify-otp
+// @access  Public
+func VerifyOTP(c *gin.Context, db *gorm.DB) {
+	var body VerifyOTPRequest
+	if !ValidateVerifyOTP(c, &body) {
+		return
+	}
+
+	// Hash the incoming OTP and look for a matching, non-expired record
+	hash := sha256.Sum256([]byte(body.OTP))
+	hashedCode := hex.EncodeToString(hash[:])
+
+	var user User
+	err := db.Where(
+		"verification_code = ? AND verification_code_exp > ?",
+		hashedCode, time.Now(),
+	).First(&user).Error
+	if err != nil {
+		c.Error(utils.NewApiError("OTP isn't found or has expired", http.StatusForbidden))
+		c.Abort()
+		return
+	}
+
+	// Mark as verified and clear OTP fields
+	if err := db.Model(&user).Updates(map[string]interface{}{
+		"is_verified":           true,
+		"verification_code":     nil,
+		"verification_code_exp": nil,
+	}).Error; err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	// Reuse existing token if present, otherwise generate a new one
+	var token string
+	var expDate time.Time
+	if user.Token != nil {
+		token = *user.Token
+		if user.TokenExpDate != nil {
+			expDate = *user.TokenExpDate
+		}
+	} else {
+		token, expDate, err = user.GenerateToken(db)
+		if err != nil {
+			c.Error(utils.NewApiError("Failed to generate token", http.StatusInternalServerError))
+			c.Abort()
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Account verified successfully",
+		"token":   token,
+		"exp":     expDate,
+		"data": gin.H{
+			"id":         user.ID,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+			"email":      user.Email,
+			"phone":      user.Phone,
+			"role":       user.Role,
+		},
+	})
+}
+
+// @desc    Send OTP to an unverified user's email
+// @route   POST /user/auth/send-otp
+// @access  Public
+func SendOTP(c *gin.Context, db *gorm.DB) {
+	var body SendOTPRequest
+	if !ValidateSendOTP(c, &body) {
+		return
+	}
+
+	// Find unverified user by email
+	var user User
+	err := db.Where("email = ? AND is_verified = ?", body.Email, false).First(&user).Error
+	if err != nil {
+		c.Error(utils.NewApiError("User not found", http.StatusNotFound))
+		c.Abort()
+		return
+	}
+
+	// Generate new OTP
+	rawCode, hashedCode, err := utils.GenerateOTPCode()
+	if err != nil {
+		c.Error(utils.NewApiError("Failed to generate OTP", http.StatusInternalServerError))
+		c.Abort()
+		return
+	}
+
+	exp := time.Now().Add(10 * time.Minute)
+	if err := db.Model(&user).Updates(map[string]interface{}{
+		"verification_code":     hashedCode,
+		"verification_code_exp": exp,
+	}).Error; err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	if err := email.UserVerificationEmail(rawCode, user.Email); err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Verification OTP is sent to your Email",
+	})
+}
