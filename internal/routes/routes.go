@@ -4,6 +4,7 @@ import (
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/admin"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/config"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/middlewares"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/user"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -14,4 +15,7 @@ func AppRoutes(server *gin.Engine, db *gorm.DB) {
 
 	admin.AdminAuthRoutes(api, db, middlewares.Protect(db), middlewares.AllowedTo)
 	admin.AdminRoutes(api, db, middlewares.Protect(db), middlewares.AllowedTo)
+
+	user.UserAuthRoutes(api, db, middlewares.Protect(db), middlewares.AllowedTo)
+	user.UserRoutes(api, db, middlewares.Protect(db), middlewares.AllowedTo)
 }
