@@ -1,13 +1,11 @@
 package user
 
 import (
-	"errors"
 	"net/http"
 
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type UserLoginRequest struct {
@@ -18,15 +16,7 @@ type UserLoginRequest struct {
 
 func ValidateUserLogin(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := userValidationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -41,19 +31,6 @@ func ValidateUserLogin(c *gin.Context, obj interface{}) bool {
 	return true
 }
 
-func userValidationMessage(fe validator.FieldError) string {
-	switch fe.Tag() {
-	case "required":
-		return utils.CamelToWords(fe.Field()) + " is required"
-	case "email":
-		return "Invalid email format"
-	case "min":
-		return utils.CamelToWords(fe.Field()) + " must have at least " + fe.Param() + " characters"
-	default:
-		return "Invalid value for " + utils.CamelToWords(fe.Field())
-	}
-}
-
 type UserRegisterRequest struct {
 	FirstName string  `json:"firstName" binding:"required"`
 	LastName  string  `json:"lastName"  binding:"required"`
@@ -64,13 +41,7 @@ type UserRegisterRequest struct {
 
 func ValidateUserRegister(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			c.Error(utils.NewApiError(userValidationMessage(ve[0]), http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -84,13 +55,7 @@ type UserVerifyAccountRequest struct {
 
 func ValidateUserVerifyAccount(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			c.Error(utils.NewApiError(userValidationMessage(ve[0]), http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -104,13 +69,7 @@ type UpdatePasswordRequest struct {
 
 func ValidateUpdatePassword(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			c.Error(utils.NewApiError(userValidationMessage(ve[0]), http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -123,13 +82,7 @@ type VerifyOTPRequest struct {
 
 func ValidateVerifyOTP(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			c.Error(utils.NewApiError(userValidationMessage(ve[0]), http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -142,13 +95,7 @@ type SendOTPRequest struct {
 
 func ValidateSendOTP(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			c.Error(utils.NewApiError(userValidationMessage(ve[0]), http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
