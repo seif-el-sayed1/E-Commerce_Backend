@@ -1,13 +1,11 @@
 package admin
 
 import (
-	"errors"
 	"net/http"
 
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type AdminLogin struct {
@@ -17,15 +15,7 @@ type AdminLogin struct {
 
 func ValidateAdminLogin(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -39,17 +29,8 @@ type ChangePassword struct {
 }
 
 func ValidateAdminChangePassword(c *gin.Context, obj interface{}) bool {
-
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -62,17 +43,8 @@ type VerifyAccount struct {
 }
 
 func ValidateAdminVerifyAccount(c *gin.Context, obj interface{}) bool {
-
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -84,17 +56,8 @@ type ForgetPassword struct {
 }
 
 func ValidateAdminForgetPassword(c *gin.Context, obj interface{}) bool {
-
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -107,32 +70,10 @@ type ResetPassword struct {
 }
 
 func ValidateAdminResetPassword(c *gin.Context, obj interface{}) bool {
-
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
 	return true
-}
-
-func validationMessage(fe validator.FieldError) string {
-	switch fe.Tag() {
-	case "required":
-		return utils.CamelToWords(fe.Field()) + " is required"
-	case "email":
-		return "Invalid email format"
-	case "min":
-		return utils.CamelToWords(fe.Field()) + " must have at least " + fe.Param() + " characters"
-	default:
-		return "Invalid value for " + utils.CamelToWords(fe.Field())
-	}
 }
