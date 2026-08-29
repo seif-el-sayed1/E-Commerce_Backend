@@ -1,12 +1,11 @@
 package admin
 
 import (
-	"errors"
 	"net/http"
+
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type Add struct {
@@ -18,15 +17,7 @@ type Add struct {
 
 func ValidateAddAdmin(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
@@ -41,15 +32,7 @@ type Update struct {
 
 func ValidateUpdateAdmin(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			message := validationMessage(ve[0])
-			c.Error(utils.NewApiError(message, http.StatusBadRequest))
-			c.Abort()
-			return false
-		}
-
-		c.Error(utils.NewApiError("Invalid request body", http.StatusBadRequest))
+		c.Error(utils.NewApiError(utils.FormatValidationError(err), http.StatusBadRequest))
 		c.Abort()
 		return false
 	}
