@@ -8,8 +8,12 @@ import (
 	"gorm.io/gorm"
 
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/admin"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/category"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/constants"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/product"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/subcategory"
 	"seif-el-sayed1/E-Commerce_Backend.git/internal/user"
+	"seif-el-sayed1/E-Commerce_Backend.git/internal/variant"
 )
 
 var DB *gorm.DB
@@ -32,6 +36,10 @@ func MigrateModels() {
 	err := DB.AutoMigrate(
 		admin.Admin{},
 		user.User{},
+		category.Category{},
+		subcategory.SubCategory{},
+		variant.Variant{},
+		product.Product{},
 	)
 	if err != nil {
 		log.Fatal(constants.Error("Failed to migrate database: "), err)
