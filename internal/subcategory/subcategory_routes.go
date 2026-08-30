@@ -11,14 +11,14 @@ func SubCategoryRoutes(rg *gin.RouterGroup, db *gorm.DB, protect gin.HandlerFunc
 	subcats := rg.Group("/subcategories")
 	{
 		// Public
-		subcats.GET("/", func(c *gin.Context) {
+		subcats.GET("", func(c *gin.Context) {
 			GetSubCategories(c, db)
 		})
 		subcats.GET("/:id", func(c *gin.Context) {
 			GetSubCategory(c, db)
 		})
 
-		subcats.POST("/", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
+		subcats.POST("", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
 			CreateSubCategory(c, db)
 		})
 		subcats.PUT("/:id", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {

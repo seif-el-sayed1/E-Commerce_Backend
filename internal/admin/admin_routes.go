@@ -16,7 +16,7 @@ func AdminRoutes(rg *gin.RouterGroup, db *gorm.DB, protect gin.HandlerFunc, allo
 		adminRoutes.POST("/add-admin", protect, allowedTo(constants.Roles.SuperAdmin), func(c *gin.Context) {
 			AddAdmin(c, db)
 		})
-		adminRoutes.GET("/", protect, allowedTo(constants.Roles.SuperAdmin), func(c *gin.Context) {
+		adminRoutes.GET("", protect, allowedTo(constants.Roles.SuperAdmin), func(c *gin.Context) {
 			GetAllAdmins(c, db)
 		})
 		adminRoutes.GET("/:id", protect, allowedTo(constants.Roles.SuperAdmin), func(c *gin.Context) {

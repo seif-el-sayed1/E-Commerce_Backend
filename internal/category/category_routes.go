@@ -11,14 +11,14 @@ func CategoryRoutes(rg *gin.RouterGroup, db *gorm.DB, protect gin.HandlerFunc, a
 	categories := rg.Group("/categories")
 	{
 		// Public
-		categories.GET("/", func(c *gin.Context) {
+		categories.GET("", func(c *gin.Context) {
 			GetCategories(c, db)
 		})
 		categories.GET("/:id", func(c *gin.Context) {
 			GetCategory(c, db)
 		})
 
-		categories.POST("/", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
+		categories.POST("", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
 			CreateCategory(c, db)
 		})
 		categories.PUT("/:id", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
