@@ -36,9 +36,10 @@ func CreateSubCategory(c *gin.Context, db *gorm.DB) {
 	subCat := SubCategory{
 		Name:       body.Name,
 		CategoryID: body.CategoryID,
+		Category:   cat,
 	}
 
-	if err := db.Create(&subCat).Error; err != nil {
+	if err := db.Omit("Category").Create(&subCat).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) || strings.Contains(err.Error(), "duplicate key value") {
 			c.Error(utils.NewApiError("Subcategory already exists", http.StatusBadRequest))
 		} else {
@@ -154,7 +155,7 @@ func UpdateSubCategory(c *gin.Context, db *gorm.DB) {
 		subCat.Name = *body.Name
 	}
 
-	if err := db.Save(&subCat).Error; err != nil {
+	if err := db.Omit("Category").Save(&subCat).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) || strings.Contains(err.Error(), "duplicate key value") {
 			c.Error(utils.NewApiError("Subcategory name already exists", http.StatusBadRequest))
 		} else {
