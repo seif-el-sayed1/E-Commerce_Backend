@@ -21,7 +21,7 @@ func CategoryRoutes(rg *gin.RouterGroup, db *gorm.DB, protect gin.HandlerFunc, a
 		categories.POST("", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
 			CreateCategory(c, db)
 		})
-		categories.PUT("/:id", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
+		categories.PATCH("/:id", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
 			UpdateCategory(c, db)
 		})
 		categories.DELETE("/:id", protect, allowedTo(constants.Roles.Admin, constants.Roles.SuperAdmin), func(c *gin.Context) {
